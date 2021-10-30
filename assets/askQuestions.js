@@ -93,7 +93,7 @@ const addDepartment = () => {
             if (hasName) {
               return true;
             } else {
-              console.log('Please enter a name for your department!');
+              console.log('Please enter a name for your new department!');
               return false;
             }
         }
@@ -110,13 +110,62 @@ const addDepartment = () => {
                 askQuestions();
             }
         })
-
     })
 }
 
 
 const addRole = () => {
-    askQuestions();
+    inquirer.prompt([
+        {
+        message: "What is the title of the role you would like to add?",
+        type: 'input',
+        name: 'title',
+        validate: hasTitle => {
+            if (hasTitle) {
+              return true;
+            } else {
+              console.log('Please enter a title for your new role!');
+              return false;
+            }
+        }}, {
+        message: "What is the salary of the role you would like to add?",
+        type: 'input',
+        name: 'salary',
+        validate: hasSalary => {
+            if (hasSalary>0) {
+              return true;
+            } else {
+              console.log('Please enter salary for your new role!');
+              return false;
+            }
+        }},
+        {
+        message: "What is the department ID of the role you would like to add?",
+        type: 'input',
+        name: 'departmentID',
+        validate: hasID => {
+            if (hasID) {
+              return true;
+            } else {
+              console.log('Please enter a department ID for your new role!');
+              return false;
+            }
+        }}
+    ]).then(result => {
+        console.log(result);
+        let newRole = [result.title, result.salary, result.departmentID];
+
+        const sql = 'INSERT INTO roles (title,salary,department_id) VALUES (?,?,?)';
+        db.query(sql, newRole, (err, rows) => {
+            if(err) {
+                console.log("An error occurred! Ensure you are using a valid department ID.");
+                
+            } else {
+                console.table("New role created!");
+                askQuestions();
+            }
+        })
+    })
 }
 
 const addEmployee = () => {
