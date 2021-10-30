@@ -36,7 +36,7 @@ const askQuestions = () => {
                 updateEmployee();
                 break;
             default:
-                console.log("Gooodbye!");
+                console.log("Goodbye!");
                 db.end();
                 break;
         }
@@ -169,11 +169,114 @@ const addRole = () => {
 }
 
 const addEmployee = () => {
-    askQuestions();
+    inquirer.prompt([
+        {
+        message: "What is the first name of the new employee?",
+        type: 'input',
+        name: 'firstName',
+        validate: hasFirstName => {
+            if (hasFirstName) {
+              return true;
+            } else {
+              console.log('Please enter a first name for your new employee!');
+              return false;
+            }
+        }},{
+        message: "What is the last name of the new employee?",
+        type: 'input',
+        name: 'lastName',
+        validate: hasLastName => {
+            if (hasLastName) {
+              return true;
+            } else {
+              console.log('Please enter a last name for your new employee!');
+              return false;
+            }
+        }}, {
+        message: "What is the role ID for your new employee?",
+        type: 'input',
+        name: 'roleID',
+        validate: hasRoleID => {
+            if (hasRoleID) {
+              return true;
+            } else {
+              console.log('Please enter a valid role ID for your new employee!');
+              return false;
+            }
+        }},
+        {
+        message: "If your new employee has a manager, enter the manager's ID. Otherwise enter 0",
+        type: 'input',
+        name: 'managerID',
+        validate: hasID => {
+            if (hasID) {
+              return true;
+            } else {
+              console.log('Please enter a valid manager ID!');
+              return false;
+            }
+        }}
+    ]).then(result => {
+        console.log(result);
+
+        let newEmployee = [];
+
+        if(result.managerID == 0) {
+            newEmployee  = [result.firstName, result.lastName, result.roleID, null];
+        } else {
+            newEmployee  = [result.firstName, result.lastName, result.roleID, result.managerID];
+        }
+
+        const sql = 'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)';
+        db.query(sql, newEmployee, (err, rows) => {
+            if(err) {
+                console.log("An error occurred! Ensure you are using a valid data.");
+                
+            } else {
+                console.table("New role created!");
+                askQuestions();
+            }
+        })
+    })
 }
 
-const updateEmployee = () => {
-    askQuestions();
+const getEmployees = () => {
+    let employeesArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT CONCAT(first_name, " ", last_name) AS Name FROM employees', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            console.log("sql", rows);
+            for(let i = 0; i < rows.length; i++) {
+                employeesArray.push(rows[i].Name);
+            }
+            resolve(employeesArray);
+        })
+    })
+
+}
+
+const updateEmployee = async () => {
+    let employeesArray = await getEmployees();
+    console.log("Passed array", employeesArray);
+    console.log("element 0", employeesArray[0].Name);
+
+    return new Promise((resolve, reject) => {
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Please select an employee:",
+                name: "employee",
+                choices: employeesArray
+            }
+        ]).then( (result) => {
+            console.log(result);
+            resolve();
+        });
+    });
 }
 
 
