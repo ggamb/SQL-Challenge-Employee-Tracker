@@ -20,6 +20,6 @@ CREATE TABLE employees(
     first_name varchar(30),
     last_name varchar(30),
     role_id INTEGER,
-    manager_id INTEGER NOT NULL,
+    manager_id INTEGER,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
 );

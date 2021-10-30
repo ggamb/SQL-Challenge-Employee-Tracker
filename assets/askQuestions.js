@@ -1,31 +1,43 @@
 const inquirer = require("inquirer")
+const db = require('../db/connection.js');
+const cTable = require('console.table');
 
 const askQuestions = () => {
     inquirer.prompt({
         message: "What would you like to do?",
         type: "list",
         choices: ["View all employees", "View all departments", "View all roles", "Add a department", "Add a role", "Add an employee", "Update an employee role", "Exit"],
-        name: "pick"
+        name: "pick",
+        loop: false
     }).then(response => {
         let userChoice = response.pick;
 
-        if(userChoice === "View all employees") {
-            
+        switch(userChoice) {
+            case "View all employees":
+                viewEmployees();
+            case"View all departments":
+            case "View all roles":
+            case "Add a department":
+            case "Add a role":
+            case "Add an employee":
+            case "Update an employee role":
+            default:
+                console.log("Gooodbye!");
+                db.end();
 
-        } else if(userChoice === "View all departments") {
 
-        } else if(userChoice === "View all roles") {
-            
-        } else if(userChoice === "Add a department") {
-            
-        } else if(userChoice === "Add a role") {
-            
-        } else if(userChoice === "Add an employee") {
-            
-        } else if(userChoice === "Update an employee role") {
-            
-        }else {
-            console.log("Goodbye!");
+        }
+    })
+}
+
+const viewEmployees = () => {
+    const sql = 'SELECT * FROM employees';
+    db.query(sql, (err, rows) => {
+        if(err) {
+            console.log("An error occurred!");
+            return;
+        } else {
+            console.table("Current employees", rows);
         }
     })
 }
