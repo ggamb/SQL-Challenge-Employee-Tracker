@@ -1,13 +1,15 @@
+//For inquirer, console.table, and connection to MySQL
 const inquirer = require("inquirer");
 const cTable = require('console.table');
 const db = require('../db/connection');
 
 
+//Asks for user input and selects correct function
 const askQuestions = () => {
     inquirer.prompt({
         message: "What would you like to do?",
         type: "list",
-        choices: ["View all employees", "View all departments", "View all roles", "Add a department", "Add a role", "Add an employee", "Update an employee role", "Exit"],
+        choices: ["View all employees", "View all departments", "View all roles", "Add a department", "Add a role", "Add an employee", "Update an employee role", "View utilized department budget", "Exit"],
         name: "pick",
         loop: false
     }).then(response => {
@@ -35,6 +37,9 @@ const askQuestions = () => {
             case "Update an employee role":
                 updateEmployee();
                 break;
+            case "View utilized department budget":
+                viewBudgetUtil();
+                break;
             default:
                 console.log("Goodbye!");
                 db.end();
@@ -43,20 +48,15 @@ const askQuestions = () => {
     })
 }
 
+//Gets data from detailed query to console employee information
+const viewEmployees = async () => {
+    const sql = await getDetailedInfo();
 
-const viewEmployees = () => {
-    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.id AS role_id, roles.title AS role_title, roles.salary, employees.manager_id, CONCAT(e.first_name, " ", e.last_name) AS manager_name, departments.name AS department_name FROM employees JOIN roles ON employees.role_id = roles.id LEFT JOIN employees e ON employees.manager_id = e.id JOIN departments ON roles.department_id = departments.id ORDER BY employees.id';
-    db.query(sql, (err, rows) => {
-        if(err) {
-            console.log("An error occurred!");
-            askQuestions();
-        } else {
-            console.table("Current employees", rows);
-            askQuestions();
-        }
-    })
+    console.table("Current employees", sql);
+    askQuestions();
 }
 
+//Consoles departments
 const viewDepartments = () => {
     const sql = 'SELECT * FROM departments ORDER BY id';
     db.query(sql, (err, rows) => {
@@ -70,6 +70,7 @@ const viewDepartments = () => {
     })
 }
 
+//Consoles Roles with department table data
 const viewRoles = () => {
     const sql = 'SELECT roles.id as role_id, roles.title, roles.salary, departments.name AS department_name FROM roles JOIN departments on roles.department_id = departments.id ORDER BY roles.id';
     db.query(sql, (err, rows) => {
@@ -83,7 +84,7 @@ const viewRoles = () => {
     })
 }
 
-
+//Adds a department based on user input
 const addDepartment = () => {
     inquirer.prompt({
         message: "What is the name of the department you would like to add?",
@@ -113,7 +114,7 @@ const addDepartment = () => {
     })
 }
 
-
+//Adds a role based on user input
 const addRole = async () => {
     let rolesArray = await getRoleNames(); 
 
@@ -171,10 +172,13 @@ const addRole = async () => {
     })
 }
 
+//Adds an employee based on user input
 const addEmployee = async () => {
-    let rolesArray = await getRoleNames(); 
+    let rolesArray = await getRoleNames();
+    let employeesArray = await getEmployeeNames();
 
     console.table("Current roles:", rolesArray);
+    console.table("Current employees:", employeesArray);
 
     inquirer.prompt([
         {
@@ -245,40 +249,7 @@ const addEmployee = async () => {
     })
 }
 
-const getEmployeeNames = () => {
-    let employeesArray = [];
-
-    return new Promise ((resolve, reject) => {
-        db.query('SELECT * FROM employees JOIN roles on employees.role_id = roles.id', (err, rows) => {
-            if(err) {
-                reject(err);
-                return;
-            } 
-            for(let i = 0; i < rows.length; i++) {
-                employeesArray.push(rows[i]);
-            }
-            resolve(employeesArray);
-        })
-    })
-}
-
-const getRoleNames = () => {
-    let roleArray = [];
-
-    return new Promise ((resolve, reject) => {
-        db.query('SELECT roles.id as role_id, roles.title, roles.salary, departments.id AS department_id, departments.name AS department_name FROM roles JOIN departments on roles.department_id = departments.id ORDER BY roles.id', (err, rows) => {
-            if(err) {
-                reject(err);
-                return;
-            } 
-            for(let i = 0; i < rows.length; i++) {
-                roleArray.push(rows[i]);
-            }
-            resolve(roleArray);
-        })
-    })
-}
-
+//Updates Employees
 const updateEmployee = async () => {
     let employeesArray = await getEmployeeNames();
 
@@ -324,7 +295,6 @@ const updateEmployee = async () => {
             }
         }
     ]).then(result => {
-        console.log(result);
         let employeeName = result.employee.split(" ");
 
         let employeeID = null;
@@ -337,13 +307,11 @@ const updateEmployee = async () => {
             }
         }
 
-        console.log("before",result.newManagerID);
+        console.log(employeeID)
 
         if(result.newManagerID == 0) {
             result.newManagerID = null;
         }
-
-        console.log("After", result.newManagerID);
 
         let updateEmployee = [result.roleID, employeeID];
 
@@ -353,11 +321,13 @@ const updateEmployee = async () => {
                 console.log("An error occurred! Ensure you are using a valid data.");
                 
             } else {
-                console.table("Employee updated!");
+                console.log("Employee updated!");
             }
         })
 
         let updateManagerID = [result.newManagerID, employeeID];
+
+        console.log("we are here");
 
         const sqlManagerID = 'UPDATE employees SET manager_id = ? WHERE id = ?';
         db.query(sqlManagerID, updateManagerID, (err, rows) => {
@@ -365,13 +335,121 @@ const updateEmployee = async () => {
                 console.log("An error occurred! Ensure you are using a valid data.");
                 
             } else {
-                console.table("Employee's manager updated!");
+                console.log("Employee's manager updated!");
             }
         })
 
+
+        console.log("we are here 2");
         askQuestions();
     });  
 }
 
+const viewBudgetUtil = async () => {
+    let detailedInfoArray =  await getDetailedInfo();
+    let departmentsArray = await getDepartmentNames();
+
+    let departmentChoices = [];
+
+    departmentsArray.forEach(department => {
+        departmentChoices.push(department.name);
+    });
+
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Select one of the following departments to view the current utilized budget",
+            name: "choice",
+            choices: departmentChoices
+        }
+    ]).then( result => {
+        let sumOfSalaries = 0;
+
+
+        detailedInfoArray.forEach(employee => {
+            if(employee.department_name == result.choice) {
+                let salary = Number(employee.salary)
+                sumOfSalaries += salary;
+            }
+        });
+
+        console.table("The total utilized budget of " + result.choice + " is: $" + sumOfSalaries);
+        askQuestions();
+    })
+}
+
+//Below are several getter functions to aid in adding features. Useful to manipulate to console specific information
+
+//Gets employee names with roles
+const getEmployeeNames = () => {
+    let employeesArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT * FROM employees JOIN roles on employees.role_id = roles.id', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            for(let i = 0; i < rows.length; i++) {
+                employeesArray.push(rows[i]);
+            }
+            resolve(employeesArray);
+        })
+    })
+}
+
+//Gets roles and role names with department table data
+const getRoleNames = () => {
+    let roleArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT roles.id as role_id, roles.title, roles.salary, departments.id AS department_id, departments.name AS department_name FROM roles JOIN departments on roles.department_id = departments.id ORDER BY roles.id', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            for(let i = 0; i < rows.length; i++) {
+                roleArray.push(rows[i]);
+            }
+            resolve(roleArray);
+        })
+    })
+}
+
+//Gets very detailed info. Used to show table of employees with manager
+const getDetailedInfo = () => {
+    let infoArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT employees.id, employees.first_name, employees.last_name, roles.id AS role_id, roles.title AS role_title, roles.salary, employees.manager_id, CONCAT(e.first_name, " ", e.last_name) AS manager_name, departments.name AS department_name FROM employees JOIN roles ON employees.role_id = roles.id LEFT JOIN employees e ON employees.manager_id = e.id JOIN departments ON roles.department_id = departments.id ORDER BY employees.id', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            for(let i = 0; i < rows.length; i++) {
+                infoArray.push(rows[i]);
+            }
+            resolve(infoArray);
+        })
+    })
+}
+
+//Gets department names
+const getDepartmentNames = () => {
+    let deptArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT * FROM departments', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            for(let i = 0; i < rows.length; i++) {
+                deptArray.push(rows[i]);
+            }
+            resolve(deptArray);
+        })
+    })
+}
 
 askQuestions();
