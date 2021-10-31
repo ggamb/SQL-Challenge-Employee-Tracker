@@ -20,7 +20,7 @@ See the following screenshot for an example output of this code:![Example](https
 
 
 ## Usage
-See this video for an example for how to use this Note Taker:
+See this video for an example for how to use this employee tracker:
 
 COMING SOON
 
