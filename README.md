@@ -8,15 +8,16 @@
 * [Questions](#questions)
 
 ## Description
-
+I created this command-line employee tracker using JavaScript and mySQL2. This application will allow you to view and manage the departments, roles, and employees in your company, along with additional features under production. This project uses a database schema to create roles, employees, and departments and will add new roles, employees, and departments to the database based on user input.
 
 ## Installation
 
-To run this code, clone the code above, navigate to the correct directory, open it in your IDE, and run `npm install` in the terminal to install all dependencies. Once they are properly installed, type `npm start` to run the code.
+To run this code, clone the code above, navigate to the correct directory, open it in your IDE, and run `npm install` in the terminal to install all dependencies. Then, create the SQL database schema and seed the database by logging into mySQL with the `mysql -u root -p` command, entering your password, and then running `source db/schema.sql;` and `source db/seeds.sql;` in the mySQL terminal. Leave the mySQL terminal with `quit;`.
 
-See the following screenshot for an example output of this code:
+Then, type `npm start` to run the code.
 
-COMING SOON
+See the following screenshot for an example output of this code:![Example](https://user-images.githubusercontent.com/86434738/139595704-6b38be0d-ca5a-404c-a4cb-aa9107e1b5d3.png)
+
 
 ## Usage
 See this video for an example for how to use this Note Taker:
