@@ -307,7 +307,7 @@ const updateEmployee = async () => {
             }
         }
 
-        console.log(employeeID)
+        console.log(employeeID);
 
         if(result.newManagerID == 0) {
             result.newManagerID = null;
