@@ -1,19 +1,21 @@
 INSERT INTO departments (name)
 VALUES
-    ("Test department"),
-    ("Tester"),
-    ("Testest"),
-    ("Testitestst");
+    ("Scrub department"),
+    ("Keep Grinding Department"),
+    ("Pretty High Up Department"),
+    ("Highest Department");
 
 INSERT INTO roles (title, salary, department_id)
 VALUES
-    ("Test manager", 200000, 1),
-    ("Test scrub", 50, 2),
-    ("Test CEO", 1000000, 4);
+    ("Mr. Manager", 200000, 1),
+    ("Scrub", 50, 2),
+    ("Worker", 100, 3),
+    ("CEO", 1000000, 4);
 
 
 INSERT INTO employees (first_name, last_name, role_id, manager_id)
 VALUES
     ("Manager", "Manager", 1, null),
     ("Scrub", "Scrub", 2, 1),
-    ("CEO", "CEO", 3, null);
+    ("Worker", "Worker", 3, 1),
+    ("CEO", "CEO", 4, null);

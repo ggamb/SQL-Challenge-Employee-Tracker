@@ -240,57 +240,104 @@ const addEmployee = () => {
     })
 }
 
-const getEmployees = () => {
+const getEmployeeNames = () => {
     let employeesArray = [];
 
     return new Promise ((resolve, reject) => {
-        db.query('SELECT CONCAT(first_name, " ", last_name) AS Name FROM employees', (err, rows) => {
+        db.query('SELECT * FROM employees', (err, rows) => {
             if(err) {
                 reject(err);
                 return;
             } 
             console.log("sql", rows);
             for(let i = 0; i < rows.length; i++) {
-                employeesArray.push(rows[i].Name);
+                employeesArray.push(rows[i]);
             }
             resolve(employeesArray);
         })
     })
+}
 
+const getRoleNames = () => {
+    let roleArray = [];
+
+    return new Promise ((resolve, reject) => {
+        db.query('SELECT * FROM roles', (err, rows) => {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            console.log("sql", rows);
+            for(let i = 0; i < rows.length; i++) {
+                roleArray.push(rows[i]);
+            }
+            resolve(roleArray);
+        })
+    })
 }
 
 const updateEmployee = async () => {
-    let employeesArray = await getEmployees();
-    console.log("Passed array", employeesArray);
-    console.log("element 0", employeesArray[0].Name);
+    let employeesArray = await getEmployeeNames();
+    let roleArray = await getRoleNames();
+    console.log("employee array", employeesArray);
+    console.log("role array", roleArray);
+    //console.log("element 0", employeesArray[0].Name);
 
+    let concatName = [];
 
-    return new Promise((resolve, reject) => {
-        inquirer.prompt([
-            {
-                type: "list",
-                message: "Please select an employee:",
-                name: "employee",
-                choices: employeesArray
-            },
-            {
-                message: "Enter the ID of the employee's new role",
-                type: 'input',
-                name: 'employeeID',
-                validate: roleID => {
-                    if (roleID) {
-                      return true;
-                    } else {
-                      console.log('Please enter a valid role ID!');
-                      return false;
-                    }
+    employeesArray.forEach(employee => {
+        concatName.push(employee.first_name + " " + employee.last_name)
+    });
+
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Please select an employee:",
+            name: "employee",
+            choices: concatName
+        },
+        {
+            message: "Enter the ID of the employee's new role",
+            type: 'input',
+            name: 'roleID',
+            validate: roleID => {
+                if (roleID) {
+                    return true;
+                } else {
+                    console.log('Please enter a valid role ID!');
+                    return false;
                 }
             }
-        ]).then( (result) => {
-            console.log(result);
-            resolve();
-        });
+        }
+    ]).then(result => {
+        console.log("yes we have it", employeesArray);
+
+        let employeeName = result.employee.split(" ");
+
+        let employeeID = null;
+
+        for(let i = 0; i < employeesArray.length; i++) {
+            if((employeesArray[i].first_name === employeeName[0]) && (employeesArray[i].last_name === employeeName[1])) {
+                employeeID = employeesArray[i].id;
+                break;
+            }
+        }
+
+
+        let updateEmployee = [result.roleID, employeeID];
+
+        const sql = 'UPDATE employees SET role_id = ? WHERE id = ?';
+        db.query(sql, updateEmployee, (err, rows) => {
+            if(err) {
+                console.log("An error occurred! Ensure you are using a valid data.");
+                
+            } else {
+                console.table("Role updated!");
+            }
+        })
+        askQuestions();
     });
+   
 }
 
 
