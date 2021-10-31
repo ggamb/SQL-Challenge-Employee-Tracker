@@ -22,7 +22,11 @@ See the following screenshot for an example output of this code:![Example](https
 ## Usage
 See this video for an example for how to use this employee tracker:
 
-COMING SOON
+
+https://user-images.githubusercontent.com/86434738/139604844-ff397240-ee82-41a2-a803-f95ddeaa27b9.mp4
+
+
+Note that this video was created at an MVP level and I may have added features since.
 
 
 ## License
