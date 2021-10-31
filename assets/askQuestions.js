@@ -45,7 +45,7 @@ const askQuestions = () => {
 
 
 const viewEmployees = () => {
-    const sql = 'SELECT * FROM employees';
+    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name FROM employees JOIN roles on employees.role_id = roles.id JOIN departments on roles.department_id = departments.id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
@@ -71,7 +71,7 @@ const viewDepartments = () => {
 }
 
 const viewRoles = () => {
-    const sql = 'SELECT * FROM roles';
+    const sql = 'SELECT roles.id as role_id, roles.title, roles.salary, roles.department_id, departments.name FROM roles JOIN departments on roles.department_id = departments.id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
@@ -264,6 +264,7 @@ const updateEmployee = async () => {
     console.log("Passed array", employeesArray);
     console.log("element 0", employeesArray[0].Name);
 
+
     return new Promise((resolve, reject) => {
         inquirer.prompt([
             {
@@ -271,6 +272,19 @@ const updateEmployee = async () => {
                 message: "Please select an employee:",
                 name: "employee",
                 choices: employeesArray
+            },
+            {
+                message: "Enter the ID of the employee's new role",
+                type: 'input',
+                name: 'employeeID',
+                validate: roleID => {
+                    if (roleID) {
+                      return true;
+                    } else {
+                      console.log('Please enter a valid role ID!');
+                      return false;
+                    }
+                }
             }
         ]).then( (result) => {
             console.log(result);
