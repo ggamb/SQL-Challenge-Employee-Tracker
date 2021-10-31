@@ -17,9 +17,10 @@ CREATE TABLE roles(
 
 CREATE TABLE employees(
     id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    first_name varchar(30),
-    last_name varchar(30),
+    first_name varchar(30) NOT NULL,
+    last_name varchar(30) NOT NULL,
     role_id INTEGER,
     manager_id INTEGER,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL,
+    FOREIGN KEY (manager_id) REFERENCES roles(id)
 );

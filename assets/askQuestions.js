@@ -45,7 +45,7 @@ const askQuestions = () => {
 
 
 const viewEmployees = () => {
-    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name FROM employees JOIN roles on employees.role_id = roles.id JOIN departments on roles.department_id = departments.id ORDER BY employees.id';
+    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.id AS role_id, roles.title AS role_title, roles.salary, employees.manager_id, CONCAT(e.first_name, " ", e.last_name) AS manager_name, departments.name AS department_name FROM employees JOIN roles ON employees.role_id = roles.id LEFT JOIN employees e ON employees.manager_id = e.id JOIN departments ON roles.department_id = departments.id ORDER BY employees.id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
@@ -117,7 +117,7 @@ const addDepartment = () => {
 const addRole = async () => {
     let rolesArray = await getRoleNames(); 
 
-    console.table(rolesArray);
+    console.table("Current roles:", rolesArray);
 
     inquirer.prompt([
         {
@@ -254,7 +254,6 @@ const getEmployeeNames = () => {
                 reject(err);
                 return;
             } 
-            console.log("sql", rows);
             for(let i = 0; i < rows.length; i++) {
                 employeesArray.push(rows[i]);
             }
@@ -267,7 +266,7 @@ const getRoleNames = () => {
     let roleArray = [];
 
     return new Promise ((resolve, reject) => {
-        db.query('SELECT * FROM roles', (err, rows) => {
+        db.query('SELECT roles.id as role_id, roles.title, roles.salary, departments.id AS department_id, departments.name AS department_name FROM roles JOIN departments on roles.department_id = departments.id ORDER BY roles.id', (err, rows) => {
             if(err) {
                 reject(err);
                 return;
@@ -289,7 +288,7 @@ const updateEmployee = async () => {
         concatName.push(employee.first_name + " " + employee.last_name)
     });
 
-    console.table(employeesArray);
+    console.table("Current employees", employeesArray);
 
     inquirer.prompt([
         {
