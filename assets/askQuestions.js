@@ -45,11 +45,11 @@ const askQuestions = () => {
 
 
 const viewEmployees = () => {
-    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name FROM employees JOIN roles on employees.role_id = roles.id JOIN departments on roles.department_id = departments.id';
+    const sql = 'SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name FROM employees JOIN roles on employees.role_id = roles.id JOIN departments on roles.department_id = departments.id ORDER BY employees.id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
-            return;
+            askQuestions();
         } else {
             console.table("Current employees", rows);
             askQuestions();
@@ -58,11 +58,11 @@ const viewEmployees = () => {
 }
 
 const viewDepartments = () => {
-    const sql = 'SELECT * FROM departments';
+    const sql = 'SELECT * FROM departments ORDER BY id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
-            return;
+            askQuestions();
         } else {
             console.table("Current departments", rows);
             askQuestions();
@@ -71,11 +71,11 @@ const viewDepartments = () => {
 }
 
 const viewRoles = () => {
-    const sql = 'SELECT roles.id as role_id, roles.title, roles.salary, roles.department_id, departments.name FROM roles JOIN departments on roles.department_id = departments.id';
+    const sql = 'SELECT roles.id as role_id, roles.title, roles.salary, departments.name AS department_name FROM roles JOIN departments on roles.department_id = departments.id ORDER BY roles.id';
     db.query(sql, (err, rows) => {
         if(err) {
             console.log("An error occurred!");
-            return;
+            askQuestions();
         } else {
             console.table("Current roles", rows);
             askQuestions();
@@ -104,7 +104,7 @@ const addDepartment = () => {
         db.query(sql, departmentName, (err, rows) => {
             if(err) {
                 console.log("An error occurred!");
-                return;
+                askQuestions();
             } else {
                 console.table("New department created!");
                 askQuestions();
@@ -114,7 +114,11 @@ const addDepartment = () => {
 }
 
 
-const addRole = () => {
+const addRole = async () => {
+    let rolesArray = await getRoleNames(); 
+
+    console.table(rolesArray);
+
     inquirer.prompt([
         {
         message: "What is the title of the role you would like to add?",
@@ -152,7 +156,6 @@ const addRole = () => {
             }
         }}
     ]).then(result => {
-        console.log(result);
         let newRole = [result.title, result.salary, result.departmentID];
 
         const sql = 'INSERT INTO roles (title,salary,department_id) VALUES (?,?,?)';
@@ -168,7 +171,11 @@ const addRole = () => {
     })
 }
 
-const addEmployee = () => {
+const addEmployee = async () => {
+    let rolesArray = await getRoleNames(); 
+
+    console.table("Current roles:", rolesArray);
+
     inquirer.prompt([
         {
         message: "What is the first name of the new employee?",
@@ -217,8 +224,6 @@ const addEmployee = () => {
             }
         }}
     ]).then(result => {
-        console.log(result);
-
         let newEmployee = [];
 
         if(result.managerID == 0) {
@@ -231,7 +236,7 @@ const addEmployee = () => {
         db.query(sql, newEmployee, (err, rows) => {
             if(err) {
                 console.log("An error occurred! Ensure you are using a valid data.");
-                
+                askQuestions();
             } else {
                 console.table("New role created!");
                 askQuestions();
@@ -267,7 +272,6 @@ const getRoleNames = () => {
                 reject(err);
                 return;
             } 
-            console.log("sql", rows);
             for(let i = 0; i < rows.length; i++) {
                 roleArray.push(rows[i]);
             }
@@ -278,16 +282,14 @@ const getRoleNames = () => {
 
 const updateEmployee = async () => {
     let employeesArray = await getEmployeeNames();
-    let roleArray = await getRoleNames();
-    console.log("employee array", employeesArray);
-    console.log("role array", roleArray);
-    //console.log("element 0", employeesArray[0].Name);
 
     let concatName = [];
 
     employeesArray.forEach(employee => {
         concatName.push(employee.first_name + " " + employee.last_name)
     });
+
+    console.table(employeesArray);
 
     inquirer.prompt([
         {
@@ -310,8 +312,6 @@ const updateEmployee = async () => {
             }
         }
     ]).then(result => {
-        console.log("yes we have it", employeesArray);
-
         let employeeName = result.employee.split(" ");
 
         let employeeID = null;
@@ -323,7 +323,6 @@ const updateEmployee = async () => {
             }
         }
 
-
         let updateEmployee = [result.roleID, employeeID];
 
         const sql = 'UPDATE employees SET role_id = ? WHERE id = ?';
@@ -332,9 +331,10 @@ const updateEmployee = async () => {
                 console.log("An error occurred! Ensure you are using a valid data.");
                 
             } else {
-                console.table("Role updated!");
+                console.table("Employee updated!");
             }
         })
+        
         askQuestions();
     });
    

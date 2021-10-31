@@ -1,0 +1,1 @@
+const askQuestions = require('.assets/askQuestions.js');
