@@ -249,9 +249,9 @@ const addEmployee = async () => {
     })
 }
 
-//Updates Employees
+//Updates Employee role ** Does not update employee's manager ID
 const updateEmployee = async () => {
-    let employeesArray = await getEmployeeNames();
+    let employeesArray = await getDetailedInfo();
 
     let concatName = [];
 
@@ -269,24 +269,11 @@ const updateEmployee = async () => {
             choices: concatName
         },
         {
-            message: "Enter the ID of the employee's new role",
+            message: "Enter the employee's new role ID",
             type: 'input',
             name: 'roleID',
             validate: roleID => {
                 if (roleID) {
-                    return true;
-                } else {
-                    console.log('Please enter a valid role ID!');
-                    return false;
-                }
-            }
-        },
-        {
-            message: "Who is the employee's new manager? Enter 0 for no manager",
-            type: 'input',
-            name: 'newManagerID',
-            validate: managerID => {
-                if (managerID) {
                     return true;
                 } else {
                     console.log('Please enter a valid role ID!');
@@ -302,18 +289,17 @@ const updateEmployee = async () => {
         for(let i = 0; i < employeesArray.length; i++) {
             if((employeesArray[i].first_name === employeeName[0]) && (employeesArray[i].last_name === employeeName[1])) {
                 employeeID = employeesArray[i].id;
-                employeeManagerID = employeesArray[i].managerID;
                 break;
             }
         }
-
-        console.log(employeeID);
 
         if(result.newManagerID == 0) {
             result.newManagerID = null;
         }
 
-        let updateEmployee = [result.roleID, employeeID];
+        let updateEmployee = [Number(result.roleID), employeeID];
+
+        console.log("update employee", updateEmployee);
 
         const sql = 'UPDATE employees SET role_id = ? WHERE id = ?';
         db.query(sql, updateEmployee, (err, rows) => {
@@ -325,22 +311,6 @@ const updateEmployee = async () => {
             }
         })
 
-        let updateManagerID = [result.newManagerID, employeeID];
-
-        console.log("we are here");
-
-        const sqlManagerID = 'UPDATE employees SET manager_id = ? WHERE id = ?';
-        db.query(sqlManagerID, updateManagerID, (err, rows) => {
-            if(err) {
-                console.log("An error occurred! Ensure you are using a valid data.");
-                
-            } else {
-                console.log("Employee's manager updated!");
-            }
-        })
-
-
-        console.log("we are here 2");
         askQuestions();
     });  
 }
@@ -385,7 +355,7 @@ const getEmployeeNames = () => {
     let employeesArray = [];
 
     return new Promise ((resolve, reject) => {
-        db.query('SELECT * FROM employees JOIN roles on employees.role_id = roles.id', (err, rows) => {
+        db.query('SELECT * FROM employees', (err, rows) => {
             if(err) {
                 reject(err);
                 return;
